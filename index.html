@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>FF6 - LED Border Trace</title>
+  <title>FF6 - LED Border Trace Fixed</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;700&display=swap');
 
@@ -12,7 +12,6 @@
       --text-primary: #e6e8eb;
       --text-secondary: #a1a5ae;
       --accent: #0a84ff;
-      --glow: #0a84ff;
     }
 
     * {
@@ -50,32 +49,94 @@
       opacity: 0;
       transform: translateY(25px);
       animation: fadeSlideIn 1s ease forwards;
-      z-index: 1;
       user-select: none;
+      z-index: 1;
     }
 
-    /* The LED border line */
+    /* LED border svg */
     .led-line {
+      pointer-events: none;
       position: absolute;
-      bottom: -6px;
+      top: -6px;
       left: -6px;
       width: calc(100% + 12px);
       height: calc(100% + 12px);
       border-radius: 36px;
-      pointer-events: none;
-      box-sizing: border-box;
-      border: 4px solid transparent;
-      /* We'll animate a custom path on the border */
+      overflow: visible;
+      z-index: 2;
     }
 
-    /* We'll use an SVG stroke animation trick here for perfect tracing */
+    h1 {
+      font-weight: 700;
+      font-size: 5rem;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.3rem;
+      user-select: none;
+      position: relative;
+      z-index: 3;
+    }
 
+    p {
+      font-weight: 400;
+      font-size: 1.25rem;
+      line-height: 1.5;
+      color: var(--text-secondary);
+      margin-bottom: 2.5rem;
+      user-select: none;
+      position: relative;
+      z-index: 3;
+    }
+
+    a {
+      display: inline-block;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 0.9rem 2.4rem;
+      border-radius: 9999px;
+      border: 2px solid var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      transition:
+        background-color 0.3s ease,
+        box-shadow 0.3s ease,
+        color 0.3s ease,
+        transform 0.25s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      z-index: 3;
+    }
+
+    a:hover,
+    a:focus {
+      background-color: var(--accent);
+      color: var(--bg);
+      box-shadow: 0 10px 20px rgba(10,132,255,0.25);
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    a:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    @keyframes fadeSlideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   </style>
 </head>
 <body>
   <main class="container" role="main">
-    <svg class="led-line" width="100%" height="100%" viewBox="0 0 508 168" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:absolute; top:-6px; left:-6px; pointer-events:none; border-radius:36px; overflow: visible;">
-      <rect x="2" y="2" width="504" height="164" rx="32" ry="32" stroke="#0a84ff" stroke-width="4" stroke-linejoin="round" stroke-dasharray="1348" stroke-dashoffset="1348" />
+    <svg class="led-line" viewBox="0 0 508 168" xmlns="http://www.w3.org/2000/svg" >
+      <rect x="2" y="2" width="504" height="164" rx="32" ry="32" 
+        stroke="#0a84ff" stroke-width="4" fill="none" stroke-linejoin="round"
+        stroke-dasharray="1348" stroke-dashoffset="1348" />
     </svg>
     <h1>FF6</h1>
     <p>building your future.<br />forgetting your past.</p>
@@ -84,7 +145,6 @@
 
   <script>
     const rect = document.querySelector('svg rect');
-    // Animate strokeDashoffset from full length (hidden) to 0 (full visible)
     rect.style.transition = 'stroke-dashoffset 4s ease forwards 1s';
     requestAnimationFrame(() => {
       rect.style.strokeDashoffset = '0';
