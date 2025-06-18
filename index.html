@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FF6</title>
   <style>
+    :root {
+      --bg: #0a0a0a;
+      --text: #ffffff;
+      --subtext: #888;
+      --accent: #ffffff;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -14,41 +21,73 @@
     html, body {
       height: 100%;
       width: 100%;
-      background-color: #000;
-      color: #fff;
+      background: var(--bg);
       font-family: 'Helvetica Neue', sans-serif;
-      overflow: hidden;
-    }
-
-    body {
+      color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+    }
+
+    .wrap {
       text-align: center;
-      padding: 2rem;
-      animation: fadeIn 1s ease-out both;
+      padding: 3rem;
+      max-width: 900px;
+      animation: fadeIn 1.2s ease-out both;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 10vw, 7rem);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+      opacity: 0;
+      animation: slideUp 1s ease forwards;
+    }
+
+    p {
+      font-size: 1.4rem;
+      color: var(--subtext);
+      margin-top: 1.2rem;
+      opacity: 0;
+      animation: slideUp 1s ease forwards;
+      animation-delay: 0.2s;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 2.5rem;
+      font-size: 1rem;
+      color: var(--text);
+      border: 1px solid var(--accent);
+      padding: 0.8rem 1.6rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border-radius: 100px;
+      opacity: 0;
+      animation: slideUp 1s ease forwards;
+      animation-delay: 0.4s;
+    }
+
+    a:hover {
+      background: var(--accent);
+      color: var(--bg);
     }
 
     @keyframes fadeIn {
-      0% {
+      from {
         opacity: 0;
-        transform: translateY(10px);
       }
-      100% {
+      to {
         opacity: 1;
-        transform: translateY(0);
       }
-    }
-
-    .container {
-      max-width: 800px;
-      animation: slideUp 1.4s ease-out both;
     }
 
     @keyframes slideUp {
       from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(20px);
       }
       to {
         opacity: 1;
@@ -56,51 +95,27 @@
       }
     }
 
-    h1 {
-      font-size: clamp(2.5rem, 10vw, 6rem);
-      font-weight: 900;
-      letter-spacing: -0.5px;
-      margin-bottom: 1rem;
-    }
-
-    p {
-      font-size: 1.4rem;
-      color: #aaa;
-      margin-bottom: 2.5rem;
-    }
-
-    a {
-      font-size: 1rem;
-      color: #fff;
-      border: 1px solid #fff;
-      padding: 0.6rem 1.4rem;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      border-radius: 3px;
-    }
-
-    a:hover {
-      background: #fff;
-      color: #000;
-    }
-
     @media (max-width: 600px) {
+      h1 {
+        font-size: 2.5rem;
+      }
+
       p {
         font-size: 1.1rem;
       }
 
       a {
         font-size: 0.9rem;
-        padding: 0.5rem 1rem;
+        padding: 0.6rem 1.2rem;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wrap">
     <h1>FF6</h1>
-    <p>"Building Your Future, Forgetting Your Past."</p>
-    <a href="https://ff6a.netlify.app/" target="_blank">fuckass</a>
+    <p>building your future.<br>forgetting your past.</p>
+    <a href="https://ff6a.netlify.app/" target="_blank">launch concept</a>
   </div>
 </body>
 </html>
