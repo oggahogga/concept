@@ -156,12 +156,17 @@
   const updateCoins = () => document.getElementById('coins').textContent = coins;
 
   function login() {
-    if (document.getElementById('username').value === 'admin' && document.getElementById('password').value === 'admin') {
-      loginForm.classList.add('hidden');
-      gameArea.classList.remove('hidden');
-      updateCoins();
-    } else alert('nah wrong login');
+  const user = document.getElementById('username').value;
+  const pass = document.getElementById('password').value;
+  if (user === 'admin' && pass === 'admin') {
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('game-area').classList.remove('hidden');
+    updateCoins();
+  } else {
+    alert('nah wrong login');
   }
+}
+
 
   function showOnly(id) {
     ['coinflip-game','mines-game','plinko-game'].forEach(i=>document.getElementById(i).classList.add('hidden'));
