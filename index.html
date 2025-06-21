@@ -1,10 +1,246 @@
-<!DOCTYPE html><html lang=en><head><meta charset=UTF-8><meta name=viewport content="width=device-width,initial-scale=1"><title>FF6</title><style>
-body,html{margin:0;padding:0;width:100%;height:100%;background:#100c1f;color:#e5e3f1;font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
-main{max-width:480px;background:linear-gradient(145deg,#2d2850,#1a1833);border-radius:36px;padding:48px 32px;box-shadow:0 28px 40px rgba(115,96,194,0.25),inset 0 0 0 1px rgba(255,255,255,0.07);backdrop-filter:saturate(180%) blur(22px);opacity:0;transform:translateY(40px);animation:fadeInUp 1.2s cubic-bezier(.4,0,.2,1) forwards;user-select:none;z-index:1;}
-h1{font-weight:800;font-size:5.5rem;letter-spacing:-0.025em;margin-bottom:12px;color:#9187e7;text-shadow:0 1px 3px rgba(145,135,231,0.6);}
-p{color:#b8b4d5;font-size:1.35rem;line-height:1.6;margin-bottom:44px;}
-a{color:#9187e7;text-decoration:none;font-weight:700;padding:14px 44px;border:2px solid #9187e7;border-radius:9999px;box-shadow:0 0 18px #9187e7;display:inline-block;transition:background-color 0.35s ease, box-shadow 0.35s ease, color 0.35s ease, transform 0.3s ease;}
-a:hover,a:focus{background:#9187e7;color:#100c1f;box-shadow:0 14px 36px #9187e7cc;transform:translateY(-4px);outline:none;}
-a:active{transform:translateY(0);box-shadow:none;}
-@keyframes fadeInUp{to{opacity:1;transform:translateY(0)}}
-</style></head><body><main><h1>FF6</h1><p>building your future.<br>forgetting your past.</p><a href=https://ff6a.netlify.app/ target=_blank>launch concept</a></main></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>vault</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background: #0e0b1d;
+      color: #f0efff;
+      font-family: 'Inter', sans-serif;
+      display: flex; align-items: center; justify-content: center;
+    }
+    main {
+      width: 100%; max-width: 500px;
+      background: linear-gradient(135deg, #1f1a38, #15112b);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 28px 40px rgba(40, 30, 80, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    .fade-up { animation: fadeUp 1s ease forwards; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+      font-size: 2.25rem;
+      margin-bottom: 20px;
+      color: #c9bfff;
+      font-weight: 800;
+    }
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      margin-bottom: 12px;
+      font-size: 1rem;
+      background: #2b2547;
+      color: #f0efff;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      margin-bottom: 12px;
+      font-size: 1rem;
+      background: #6c5dd3;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 20px #6c5dd360;
+      transition: 0.3s ease;
+    }
+    button:hover { background: #8571ff; transform: translateY(-2px); }
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .btn-group button {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 1rem;
+    }
+    #coins-wrap {
+      position: absolute;
+      top: 20px; right: 28px;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    .coin-float {
+      position: absolute;
+      top: -5px;
+      right: 0;
+      color: #7fffa8;
+      font-weight: bold;
+      animation: floatUp 1s ease-out forwards;
+    }
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-30px); }
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+<main>
+  <div id="coins-wrap">Coins: <span id="coins">10000</span></div>
+
+  <div id="login" class="fade-up">
+    <h1>vault access</h1>
+    <input type="text" id="username" placeholder="admin" />
+    <input type="password" id="password" placeholder="admin" />
+    <button onclick="handleLogin()">enter</button>
+  </div>
+
+  <div id="menu" class="hidden fade-up">
+    <h1>game room</h1>
+    <div class="btn-group">
+      <button onclick="showFlip()">🪙 coin flip</button>
+      <button onclick="showMines()">💣 mines</button>
+    </div>
+  </div>
+
+  <div id="coin-flip" class="hidden fade-up">
+    <h1>coin flip</h1>
+    <input type="range" id="betAmount" min="100" max="5000" value="100" oninput="updateBetDisplay()" />
+    <p>betting: <span id="betDisplay">100</span> coins</p>
+    <button onclick="flip()">flip</button>
+    <button onclick="goBack()">back</button>
+    <p id="result"></p>
+  </div>
+
+  <div id="mines-game" class="hidden fade-up">
+    <h1>mines</h1>
+    <input type="range" id="minesBet" min="100" max="5000" value="100" oninput="updateMinesBet()" />
+    <p>starting bet: <span id="minesBetDisplay">100</span> coins</p>
+    <div id="grid"></div>
+    <p id="result-mine"></p>
+    <button onclick="resetMines()">retry</button>
+    <button onclick="goBack()">back</button>
+  </div>
+</main>
+
+<script>
+  let coins = 10000;
+  let betAmount = 100;
+  let minesBet = 100;
+  let mineIndexes = [];
+  let gameOver = false;
+
+  function updateCoins() {
+    document.getElementById('coins').textContent = coins;
+  }
+  function floatCoins(amount) {
+    const el = document.createElement("div");
+    el.className = "coin-float";
+    el.textContent = `${amount >= 0 ? '+' : ''}${amount}`;
+    document.getElementById('coins-wrap').appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+  }
+  function handleLogin() {
+    let u = document.getElementById('username').value;
+    let p = document.getElementById('password').value;
+    if (u === 'admin' && p === 'admin') {
+      document.getElementById('login').classList.add('hidden');
+      document.getElementById('menu').classList.remove('hidden');
+    } else alert("invalid");
+  }
+  function hideAll() {
+    ['menu','coin-flip','mines-game'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    document.getElementById('result').textContent = '';
+    document.getElementById('result-mine').textContent = '';
+  }
+  function goBack() {
+    hideAll();
+    document.getElementById('menu').classList.remove('hidden');
+  }
+  function showFlip() {
+    hideAll();
+    document.getElementById('coin-flip').classList.remove('hidden');
+  }
+  function showMines() {
+    hideAll();
+    document.getElementById('mines-game').classList.remove('hidden');
+    resetMines();
+  }
+  function updateBetDisplay() {
+    betAmount = parseInt(document.getElementById('betAmount').value);
+    document.getElementById('betDisplay').textContent = betAmount;
+  }
+  function flip() {
+    if (coins < betAmount) return alert("broke");
+    coins -= betAmount;
+    let win = Math.random() < 0.5;
+    if (win) {
+      let gain = betAmount * 2;
+      coins += gain;
+      floatCoins(gain);
+      document.getElementById('result').textContent = "won.";
+    } else {
+      floatCoins(-betAmount);
+      document.getElementById('result').textContent = "lost.";
+    }
+    updateCoins();
+  }
+  function updateMinesBet() {
+    minesBet = parseInt(document.getElementById('minesBet').value);
+    document.getElementById('minesBetDisplay').textContent = minesBet;
+  }
+  function resetMines() {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    mineIndexes = [];
+    gameOver = false;
+    while (mineIndexes.length < 5) {
+      let r = Math.floor(Math.random() * 25);
+      if (!mineIndexes.includes(r)) mineIndexes.push(r);
+    }
+    if (coins < minesBet) return alert("not enough coins");
+    coins -= minesBet;
+    floatCoins(-minesBet);
+    updateCoins();
+    for (let i = 0; i < 25; i++) {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.onclick = () => handleMineClick(tile, i);
+      grid.appendChild(tile);
+    }
+  }
+  function handleMineClick(tile, i) {
+    if (tile.classList.contains('revealed') || gameOver) return;
+    tile.classList.add('revealed');
+    if (mineIndexes.includes(i)) {
+      tile.classList.add('mine');
+      document.getElementById('result-mine').textContent = "you exploded";
+      revealMines();
+      gameOver = true;
+    } else {
+      tile.classList.add('safe');
+      let gain = Math.floor(minesBet * 0.15);
+      coins += gain;
+      floatCoins(gain);
+      updateCoins();
+    }
+  }
+  function revealMines() {
+    const tiles = document.querySelectorAll('.tile');
+    mineIndexes.forEach(i => {
+      tiles[i].classList.add('mine');
+    });
+  }
+  updateCoins();
+</script>
+</body>
+</html>
