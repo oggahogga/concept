@@ -1,235 +1,533 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>vault</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vault</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.20.6/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    html, body {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
-      background: #0e0b1d;
-      color: #f0efff;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    body {
       font-family: 'Inter', sans-serif;
-      display: flex; align-items: center; justify-content: center;
-    }
-    main {
-      width: 100%; max-width: 500px;
-      background: linear-gradient(135deg, #1f1a38, #15112b);
-      border-radius: 20px;
-      padding: 32px;
-      box-shadow: 0 28px 40px rgba(40, 30, 80, 0.4);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    h1 {
-      font-size: 2.25rem;
-      margin-bottom: 20px;
-      color: #c9bfff;
-      font-weight: 800;
-      text-align: center;
-    }
-    input[type="text"], input[type="password"], input[type="range"] {
-      width: 80%;
-      display: block;
-      margin: 0 auto 12px auto;
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
-      font-size: 1rem;
-      background: #2b2547;
+      background: linear-gradient(135deg, #0e0b1d, #1f1a38);
       color: #f0efff;
-    }
-    button {
-      width: 80%;
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
-      margin-bottom: 12px;
-      font-size: 1rem;
-      background: #6c5dd3;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 20px #6c5dd360;
-      transition: 0.3s ease;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    button:hover { background: #8571ff; transform: translateY(-2px); }
-    .btn-group {
+      margin: 0;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      width: 100%;
-    }
-    .btn-group button {
-      width: 45%;
-      display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-size: 1rem;
+      overflow-x: hidden;
     }
-    #coins-wrap {
-      position: absolute;
-      top: 20px; right: 28px;
-      font-weight: 600;
-      font-size: 1.1rem;
-    }
-    .hidden { display: none; }
-    #login-form {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    #root {
       width: 100%;
+      max-width: 600px;
+      padding: 1rem;
     }
-    canvas {
-      margin: 16px 0;
+    .glow {
+      box-shadow: 0 0 20px rgba(108, 93, 211, 0.4);
+    }
+    .game-card {
+      background: linear-gradient(135deg, #1f1a38, #15112b);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+    }
+    .mines-grid button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .plinko-canvas {
+      border-radius: 1rem;
       background: #1e1b34;
-      border-radius: 10px;
     }
   </style>
 </head>
 <body>
-<main>
-  <div id="login-form">
-    <h1>login</h1>
-    <input type="text" id="username" placeholder="admin">
-    <input type="password" id="password" placeholder="admin">
-    <button onclick="login()">enter</button>
-  </div>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
 
-  <div id="game-area" class="hidden">
-    <div id="coins-wrap">Coins: <span id="coins">10000</span></div>
-    <div class="btn-group">
-      <button onclick="showOnly('coinflip-game')">🪙 Coinflip</button>
-      <button onclick="showOnly('mines-game'); setupMines()">💣 Mines</button>
-      <button onclick="showOnly('plinko-game')">🔻 Plinko</button>
-    </div>
+    const Login = ({ onLogin }) => {
+      const [username, setUsername] = useState('');
+      const [password, setPassword] = useState('');
+      const [error, setError] = useState('');
+      const formRef = useRef(null);
 
-    <div id="coinflip-game" class="hidden">
-      <h1>Coinflip</h1>
-      <input type="range" id="cfBet" min="100" max="10000" value="100" oninput="cfVal.innerText=this.value">
-      <p>betting: <span id="cfVal">100</span> coins</p>
-      <button onclick="flipCoin()">Flip</button>
-      <p id="cfResult"></p>
-    </div>
+      useEffect(() => {
+        gsap.from(formRef.current, {
+          opacity: 0,
+          y: 50,
+          duration: 1,
+          ease: 'power3.out'
+        });
+      }, []);
 
-    <div id="mines-game" class="hidden">
-      <h1>Mines</h1>
-      <input type="range" id="minesBet" min="100" max="10000" value="100" oninput="minesBetDisplay.innerText=this.value">
-      <p>betting: <span id="minesBetDisplay">100</span> coins</p>
-      <div id="minesGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;"></div>
-      <p id="minesMsg"></p>
-      <button onclick="cashoutMines()">cash out</button>
-    </div>
+      const handleLogin = (e) => {
+        e.preventDefault();
+        if (username === 'admin' && password === 'admin') {
+          gsap.to(formRef.current, {
+            opacity: 0,
+            y: -50,
+            duration: 0.5,
+            onComplete: () => onLogin()
+          });
+        } else {
+          setError('Invalid credentials');
+          gsap.from(formRef.current, {
+            x: -10,
+            duration: 0.1,
+            repeat: 3,
+            ease: 'power1.inOut'
+          });
+        }
+      };
 
-    <div id="plinko-game" class="hidden">
-      <h1>Plinko</h1>
-      <input type="range" id="plinkoBet" min="100" max="10000" value="100" oninput="plinkoBetDisplay.innerText=this.value">
-      <p>betting: <span id="plinkoBetDisplay">100</span> coins</p>
-      <canvas id="plinkoCanvas" width="300" height="300"></canvas>
-      <button onclick="dropPlinko()">drop</button>
-      <p id="plinkoResult"></p>
-    </div>
-  </div>
-</main>
-<script>
-  let coins = 10000;
-  let minesHits = 0, mineIndexes = [];
-  const updateCoins = () => coinsEl.innerText = coins;
+      return (
+        <div ref={formRef} className="game-card mx-auto glow">
+          <h1 className="text-4xl font-extrabold text-purple-300 mb-8 text-center">Vault Login</h1>
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full p-3 rounded-lg bg-gray-800 text-white border-none focus:ring-2 focus:ring-purple-500"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full p-3 rounded-lg bg-gray-800 text-white border-none focus:ring-2 focus:ring-purple-500"
+            />
+            {error && <p className="text-red-400 text-center">{error}</p>}
+            <button
+              onClick={handleLogin}
+              className="w-full p-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all duration-300 transform hover:-translate-y-1"
+            >
+              Enter
+            </button>
+          </div>
+        </div>
+      );
+    };
 
-  function login() {
-    const u = document.getElementById('username').value;
-    const p = document.getElementById('password').value;
-    if (u === 'admin' && p === 'admin') {
-      document.getElementById('login-form').classList.add('hidden');
-      document.getElementById('game-area').classList.remove('hidden');
-      updateCoins();
-    } else alert('wrong login');
-  }
+    const CoinflipGame = ({ coins, setCoins }) => {
+      const [bet, setBet] = useState(100);
+      const [choice, setChoice] = useState('heads');
+      const [result, setResult] = useState('');
+      const cardRef = useRef(null);
 
-  function showOnly(id) {
-    ['coinflip-game','mines-game','plinko-game'].forEach(i=>document.getElementById(i).classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-  }
+      useEffect(() => {
+        gsap.from(cardRef.current, {
+          opacity: 0,
+          scale: 0.9,
+          duration: 0.8,
+          ease: 'back.out(1.7)'
+        });
+      }, []);
 
-  function flipCoin() {
-    const bet = parseInt(cfBet.value);
-    if (coins < bet) return alert('nah broke');
-    const win = Math.random() < 0.5;
-    coins += win ? bet : -bet;
-    updateCoins();
-    cfResult.innerText = win ? `+${bet} heads` : `-${bet} tails`;
-  }
+      const flipCoin = () => {
+        if (coins < bet) {
+          setResult('Insufficient coins!');
+          return;
+        }
+        const outcome = Math.random() < 0.5 ? 'heads' : 'tails';
+        const win = outcome === choice;
+        const change = win ? bet : -bet;
+        setCoins(coins + change);
+        setResult(win ? `+${bet} (${outcome})` : `-${bet} (${outcome})`);
+        gsap.to(cardRef.current, {
+          rotationY: 360,
+          duration: 1,
+          ease: 'power2.inOut',
+          onComplete: () => gsap.set(cardRef.current, { rotationY: 0 })
+        });
+      };
 
-  function setupMines() {
-    minesGrid.innerHTML = '';
-    mineIndexes = Array.from({length: 25}, (_,i)=>i).sort(()=>0.5-Math.random()).slice(0,5);
-    for (let i = 0; i < 25; i++) {
-      const btn = document.createElement('button');
-      btn.textContent = '?';
-      btn.style.padding = '20px';
-      btn.onclick = () => clickMine(btn, i);
-      minesGrid.appendChild(btn);
-    }
-    minesHits = 0;
-    minesMsg.innerText = '';
-  }
+      return (
+        <div ref={cardRef} className="game-card glow">
+          <h2 className="text-3xl font-bold text-purple-300 mb-6 text-center">Coinflip 🪙</h2>
+          <div className="flex justify-center mb-4">
+            <button
+              onClick={() => setChoice('heads')}
+              className={`px-4 py-2 rounded-l-lg ${choice === 'heads' ? 'bg-purple-600' : 'bg-gray-600'} hover:bg-purple-500 transition-all duration-300`}
+            >
+              Heads
+            </button>
+            <button
+              onClick={() => setChoice('tails')}
+              className={`px-4 py-2 rounded-r-lg ${choice === 'tails' ? 'bg-purple-600' : 'bg-gray-600'} hover:bg-purple-500 transition-all duration-300`}
+            >
+              Tails
+            </button>
+          </div>
+          <input
+            type="range"
+            min="100"
+            max="10000"
+            value={bet}
+            onChange={(e) => setBet(parseInt(e.target.value))}
+            className="w-full mb-4 accent-purple-500"
+          />
+          <p className="text-center mb-4">Bet: {bet} coins on {choice}</p>
+          <button
+            onClick={flipCoin}
+            className="w-full p-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all duration-300"
+          >
+            Flip Coin
+          </button>
+          {result && <p className="text-center mt-4 text-lg">{result}</p>}
+        </div>
+      );
+    };
 
-  function clickMine(btn, i) {
-    const bet = parseInt(minesBet.value);
-    if (mineIndexes.includes(i)) {
-      btn.textContent = '💥';
-      coins -= bet;
-      updateCoins();
-      minesMsg.innerText = 'you exploded';
-    } else {
-      btn.textContent = '✅';
-      minesHits++;
-      let cash = Math.floor(minesHits * bet * 0.15);
-      minesMsg.innerText = `cashout value: ${cash}`;
-    }
-  }
+    const MinesGame = ({ coins, setCoins }) => {
+      const [bet, setBet] = useState(100);
+      const [numMines, setNumMines] = useState(5);
+      const [mines, setMines] = useState([]);
+      const [clicked, setClicked] = useState([]);
+      const [hits, setHits] = useState(0);
+      const [message, setMessage] = useState('');
+      const [gameOver, setGameOver] = useState(false);
+      const gridRef = useRef(null);
 
-  function cashoutMines() {
-    const bet = parseInt(minesBet.value);
-    let gain = Math.floor(minesHits * bet * 0.15);
-    coins += gain;
-    updateCoins();
-    minesMsg.innerText = `cashed out: ${gain}`;
-  }
+      useEffect(() => {
+        setupMines();
+        gsap.from(gridRef.current, {
+          opacity: 0,
+          y: 30,
+          duration: 0.8,
+          ease: 'power3.out'
+        });
+      }, [numMines]);
 
-  function dropPlinko() {
-    const bet = parseInt(plinkoBet.value);
-    if (coins < bet) return alert('nah');
-    coins -= bet;
-    const canvas = document.getElementById('plinkoCanvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const slots = [0, 0.5, 1, 1.5, 2];
-    let pos = 2;
-    for (let i = 0; i < 8; i++) {
-      pos += Math.random() < 0.5 ? -1 : 1;
-      if (pos < 0) pos = 0;
-      if (pos > 4) pos = 4;
-    }
-    const win = Math.floor(bet * slots[pos]);
-    coins += win;
-    updateCoins();
-    plinkoResult.innerText = `won ${win} coins`;
-    ctx.fillStyle = '#7fffa8';
-    ctx.beginPath();
-    ctx.arc(pos * 60 + 30, 270, 10, 0, Math.PI * 2);
-    ctx.fill();
-  }
-</script>
+      const setupMines = () => {
+        const mineIndexes = Array.from({ length: 25 }, (_, i) => i)
+          .sort(() => 0.5 - Math.random())
+          .slice(0, numMines);
+        setMines(mineIndexes);
+        setClicked([]);
+        setHits(0);
+        setMessage('');
+        setGameOver(false);
+      };
+
+      const clickMine = (index) => {
+        if (gameOver || clicked.includes(index)) return;
+        const newClicked = [...clicked, index];
+        setClicked(newClicked);
+        if (mines.includes(index)) {
+          setMessage('You hit a mine! 💥');
+          setCoins(coins - bet);
+          setGameOver(true);
+          setClicked([...newClicked, ...mines]);
+        } else {
+          setHits(hits + 1);
+          const multiplier = 0.15 / (numMines / 5);
+          const cashout = Math.floor((hits + 1) * bet * multiplier);
+          setMessage(`Cashout value: ${cashout} coins`);
+          gsap.from(gridRef.current.children[index], {
+            scale: 0.5,
+            duration: 0.3,
+            ease: 'back.out(1.7)'
+          });
+        }
+      };
+
+      const cashout = () => {
+        if (gameOver || hits === 0) return;
+        const multiplier = 0.15 / (numMines / 5);
+        const gain = Math.floor(hits * bet * multiplier);
+        setCoins(coins + gain);
+        setMessage(`Cashed out: ${gain} coins`);
+        setGameOver(true);
+        setClicked([...clicked, ...mines]);
+      };
+
+      return (
+        <div className="game-card glow">
+          <h2 className="text-3xl font-bold text-purple-300 mb-6 text-center">Mines 💣</h2>
+          <div className="flex justify-center mb-4">
+            <select
+              value={numMines}
+              onChange={(e) => setNumMines(parseInt(e.target.value))}
+              className="p-2 rounded-lg bg-gray-800 text-white border-none focus:ring-2 focus:ring-purple-500"
+            >
+              {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+                <option key={num} value={num}>{num} Mines</option>
+              ))}
+            </select>
+          </div>
+          <input
+            type="range"
+            min="100"
+            max="10000"
+            value={bet}
+            onChange={(e) => setBet(parseInt(e.target.value))}
+            className="w-full mb-4 accent-purple-500"
+          />
+          <p className="text-center mb-4">Bet: {bet} coins</p>
+          <div
+            ref={gridRef}
+            className="mines-grid grid grid-cols-5 gap-2 mb-4"
+          >
+            {Array.from({ length: 25 }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => clickMine(i)}
+                disabled={gameOver || clicked.includes(i)}
+                className="p-4 rounded-lg bg-gray-800 hover:bg-gray-700 text-2xl"
+              >
+                {clicked.includes(i) ? (mines.includes(i) ? '💥' : '✅') : '?'}
+              </button>
+            ))}
+          </div>
+          {message && <p className="text-center mb-4">{message}</p>}
+          <button
+            onClick={cashout}
+            className="w-full p-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all duration-300"
+          >
+            Cash Out
+          </button>
+          <button
+            onClick={setupMines}
+            className="w-full p-3 mt-2 rounded-lg bg-gray-600 hover:bg-gray-500 text-white font-bold transition-all duration-300"
+          >
+            Reset Game
+          </button>
+        </div>
+      );
+    };
+
+    const PlinkoGame = ({ coins, setCoins }) => {
+      const [bet, setBet] = useState(100);
+      const [result, setResult] = useState('');
+      const canvasRef = useRef(null);
+      const cardRef = useRef(null);
+
+      useEffect(() => {
+        gsap.from(cardRef.current, {
+          opacity: 0,
+          scale: 0.9,
+          duration: 0.8,
+          ease: 'back.out(1.7)'
+        });
+        setupPlinko();
+      }, []);
+
+      const setupPlinko = () => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawPegs(ctx);
+        drawSlots(ctx);
+      };
+
+      const drawPegs = (ctx) => {
+        ctx.fillStyle = '#ffffff';
+        for (let row = 0; row < 8; row++) {
+          for (let col = 0; col < (row % 2 === 0 ? 5 : 4); col++) {
+            const x = row % 2 === 0 ? col * 60 + 30 : col * 60 + 60;
+            const y = row * 40 + 40;
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      };
+
+      const drawSlots = (ctx) => {
+        const slots = [0, 0.5, 1, 1.5, 2];
+        ctx.fillStyle = '#4b3b8e';
+        for (let i = 0; i < slots.length; i++) {
+          ctx.fillRect(i * 60, 280, 60, 20);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '12px Inter';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${slots[i]}x`, i * 60 + 30, 295);
+          ctx.fillStyle = '#4b3b8e';
+        }
+      };
+
+      const dropPlinko = () => {
+        if (coins < bet) {
+          setResult('Insufficient coins!');
+          return;
+        }
+        setCoins(coins - bet);
+        setResult('');
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        let x = 150; // Start at center
+        let y = 0;
+        let vx = (Math.random() - 0.5) * 2; // Initial random horizontal velocity
+        let vy = 0;
+        const gravity = 0.3;
+        const restitution = 0.7; // Bounciness
+        const ballRadius = 10;
+        const pegs = [];
+        for (let row = 0; row < 8; row++) {
+          for (let col = 0; col < (row % 2 === 0 ? 5 : 4); col++) {
+            const px = row % 2 === 0 ? col * 60 + 30 : col * 60 + 60;
+            const py = row * 40 + 40;
+            pegs.push({ x: px, y: py, radius: 5 });
+          }
+        }
+        const slots = [0, 0.5, 1, 1.5, 2];
+
+        const animate = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawPegs(ctx);
+          drawSlots(ctx);
+          vy += gravity;
+          x += vx;
+          y += vy;
+
+          // Boundary checks
+          if (x < ballRadius) { x = ballRadius; vx = -vx * restitution; }
+          if (x > 300 - ballRadius) { x = 300 - ballRadius; vx = -vx * restitution; }
+
+          // Peg collision
+          pegs.forEach(peg => {
+            const dx = x - peg.x;
+            const dy = y - peg.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const minDistance = ballRadius + peg.radius;
+            if (distance < minDistance) {
+              // Calculate collision normal
+              const nx = dx / distance;
+              const ny = dy / distance;
+              // Relative velocity
+              const relativeVelocity = vx * nx + vy * ny;
+              // Reflect velocity
+              vx -= 2 * relativeVelocity * nx * restitution;
+              vy -= 2 * relativeVelocity * ny * restitution;
+              // Move ball out of peg
+              const overlap = minDistance - distance;
+              x += nx * overlap;
+              y += ny * overlap;
+            }
+          });
+
+          ctx.fillStyle = '#7fffa8';
+          ctx.beginPath();
+          ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (y < 280 - ballRadius) {
+            requestAnimationFrame(animate);
+          } else {
+            const slotIndex = Math.min(slots.length - 1, Math.max(0, Math.floor(x / 60)));
+            const win = Math.floor(bet * slots[slotIndex]);
+            setCoins(prevCoins => prevCoins + win);
+            setResult(`Won ${win} coins! (${slots[slotIndex]}x)`);
+            drawPegs(ctx);
+            drawSlots(ctx);
+            ctx.fillStyle = '#7fffa8';
+            ctx.beginPath();
+            ctx.arc(slotIndex * 60 + 30, 280, ballRadius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        };
+        requestAnimationFrame(animate);
+      };
+
+      return (
+        <div ref={cardRef} className="game-card glow">
+          <h2 className="text-3xl font-bold text-purple-300 mb-6 text-center">Plinko 🔻</h2>
+          <input
+            type="range"
+            min="100"
+            max="10000"
+            value={bet}
+            onChange={(e) => setBet(parseInt(e.target.value))}
+            className="w-full mb-4 accent-purple-500"
+          />
+          <p className="text-center mb-4">Bet: {bet} coins</p>
+          <canvas ref={canvasRef} width="300" height="300" className="plinko-canvas mb-4 mx-auto"></canvas>
+          <button
+            onClick={dropPlinko}
+            className="w-full p-3 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold transition-all duration-300"
+          >
+            Drop Ball
+          </button>
+          {result && <p className="text-center mt-4 text-lg">{result}</p>}
+        </div>
+      );
+    };
+
+    const App = () => {
+      const [isLoggedIn, setIsLoggedIn] = useState(false);
+      const [coins, setCoins] = useState(10000);
+      const [activeGame, setActiveGame] = useState('coinflip');
+      const navRef = useRef(null);
+
+      useEffect(() => {
+        if (isLoggedIn) {
+          gsap.from(navRef.current, {
+            opacity: 0,
+            y: -20,
+            duration: 0.5,
+            ease: 'power3.out'
+          });
+        }
+      }, [isLoggedIn]);
+
+      const renderGame = () => {
+        switch (activeGame) {
+          case 'coinflip':
+            return <CoinflipGame coins={coins} setCoins={setCoins} />;
+          case 'mines':
+            return <MinesGame coins={coins} setCoins={setCoins} />;
+          case 'plinko':
+            return <PlinkoGame coins={coins} setCoins={setCoins} />;
+          default:
+            return null;
+        }
+      };
+
+      if (!isLoggedIn) {
+        return <Login onLogin={() => setIsLoggedIn(true)} />;
+      }
+
+      return (
+        <div className="space-y-4">
+          <div ref={navRef} className="game-card glow flex justify-between items-center p-4">
+            <div className="text-lg font-semibold">Coins: {coins}</div>
+            <div className="space-x-2">
+              <button
+                onClick={() => setActiveGame('coinflip')}
+                className={`px-4 py-2 rounded-lg ${activeGame === 'coinflip' ? 'bg-purple-600' : 'bg-gray-600'} hover:bg-purple-500 transition-all duration-300`}
+              >
+                🪙 Coinflip
+              </button>
+              <button
+                onClick={() => setActiveGame('mines')}
+                className={`px-4 py-2 rounded-lg ${activeGame === 'mines' ? 'bg-purple-600' : 'bg-gray-600'} hover:bg-purple-500 transition-all duration-300`}
+              >
+                💣 Mines
+              </button>
+              <button
+                onClick={() => setActiveGame('plinko')}
+                className={`px-4 py-2 rounded-lg ${activeGame === 'plinko' ? 'bg-purple-600' : 'bg-gray-600'} hover:bg-purple-500 transition-all duration-300`}
+              >
+                🔻 Plinko
+              </button>
+            </div>
+          </div>
+          <div className="transition-all duration-500">
+            {renderGame()}
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
 </body>
 </html>
