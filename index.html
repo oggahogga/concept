@@ -73,6 +73,7 @@
       display: flex;
       justify-content: center;
       gap: 12px;
+      flex-wrap: wrap;
       width: 100%;
     }
     .btn-group button {
@@ -128,6 +129,29 @@
       top: 0; left: 0;
       width: 100%; height: 100%;
     }
+    #slot-machine {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      max-width: 360px;
+      margin: 20px auto;
+    }
+    .reel {
+      width: 60px;
+      height: 60px;
+      font-size: 2rem;
+      text-align: center;
+      background: #2b2547;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: spin 0.5s ease;
+    }
+    @keyframes spin {
+      0% { transform: rotateX(0); }
+      100% { transform: rotateX(360deg); }
+    }
     p {
       text-align: center;
     }
@@ -136,22 +160,20 @@
 <body>
 <main>
   <div id="coins-wrap">Coins: <span id="coins">10000</span></div>
-
   <div id="login" class="fade-up">
     <h1>vault access</h1>
     <input type="text" id="username" placeholder="admin" />
     <input type="password" id="password" placeholder="admin" />
     <button onclick="handleLogin()">enter</button>
   </div>
-
   <div id="menu" class="hidden fade-up">
     <h1>game room</h1>
     <div class="btn-group">
       <button onclick="showFlip()">🪙 coin flip</button>
       <button onclick="showMines()">💣 mines</button>
+      <button onclick="showSlots()">🎰 slots</button>
     </div>
   </div>
-
   <div id="coin-flip" class="hidden fade-up">
     <h1>coin flip</h1>
     <input type="range" id="betAmount" min="100" max="5000" value="100" oninput="updateBetDisplay()" />
@@ -160,7 +182,6 @@
     <button onclick="goBack()">back</button>
     <p id="result"></p>
   </div>
-
   <div id="mines-game" class="hidden fade-up">
     <h1>mines</h1>
     <input type="range" id="minesBet" min="100" max="5000" value="100" oninput="updateMinesBet()" />
@@ -170,14 +191,28 @@
     <button onclick="resetMines()">retry</button>
     <button onclick="goBack()">back</button>
   </div>
+  <div id="slots-game" class="hidden fade-up">
+    <h1>slots</h1>
+    <input type="range" id="slotsBet" min="100" max="5000" value="100" oninput="document.getElementById('slotsBetDisplay').textContent = this.value" />
+    <p>betting: <span id="slotsBetDisplay">100</span> coins</p>
+    <div id="slot-machine">
+      <div class="reel" id="r1">🍒</div>
+      <div class="reel" id="r2">🍋</div>
+      <div class="reel" id="r3">🍊</div>
+    </div>
+    <button onclick="spinSlots()">spin</button>
+    <button onclick="goBack()">back</button>
+    <p id="result-slot"></p>
+  </div>
 </main>
-
 <script>
   let coins = 10000;
   let betAmount = 100;
   let minesBet = 100;
+  let slotsBet = 100;
   let mineIndexes = [];
   let gameOver = false;
+  const emojis = ["🍒", "🍋", "🍊", "🍇", "🔔", "💎"];
 
   function updateCoins() {
     document.getElementById('coins').textContent = coins;
@@ -198,23 +233,19 @@
     } else alert("invalid");
   }
   function hideAll() {
-    ['menu','coin-flip','mines-game'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    ['menu','coin-flip','mines-game','slots-game'].forEach(id => document.getElementById(id).classList.add('hidden'));
     document.getElementById('result').textContent = '';
     document.getElementById('result-mine').textContent = '';
+    document.getElementById('result-slot').textContent = '';
   }
   function goBack() {
     hideAll();
     document.getElementById('menu').classList.remove('hidden');
   }
-  function showFlip() {
-    hideAll();
-    document.getElementById('coin-flip').classList.remove('hidden');
-  }
-  function showMines() {
-    hideAll();
-    document.getElementById('mines-game').classList.remove('hidden');
-    resetMines();
-  }
+  function showFlip() { hideAll(); document.getElementById('coin-flip').classList.remove('hidden'); }
+  function showMines() { hideAll(); document.getElementById('mines-game').classList.remove('hidden'); resetMines(); }
+  function showSlots() { hideAll(); document.getElementById('slots-game').classList.remove('hidden'); }
+
   function updateBetDisplay() {
     betAmount = parseInt(document.getElementById('betAmount').value);
     document.getElementById('betDisplay').textContent = betAmount;
@@ -279,6 +310,39 @@
     mineIndexes.forEach(i => {
       tiles[i].classList.add('mine');
     });
+  }
+  function spinSlots() {
+    slotsBet = parseInt(document.getElementById('slotsBet').value);
+    if (coins < slotsBet) return alert("broke");
+    coins -= slotsBet;
+    floatCoins(-slotsBet);
+
+    const r1 = document.getElementById("r1");
+    const r2 = document.getElementById("r2");
+    const r3 = document.getElementById("r3");
+    const symbols = [
+      emojis[Math.floor(Math.random() * emojis.length)],
+      emojis[Math.floor(Math.random() * emojis.length)],
+      emojis[Math.floor(Math.random() * emojis.length)]
+    ];
+    r1.textContent = symbols[0];
+    r2.textContent = symbols[1];
+    r3.textContent = symbols[2];
+
+    if (symbols[0] === symbols[1] && symbols[1] === symbols[2]) {
+      let prize = slotsBet * 10;
+      coins += prize;
+      floatCoins(prize);
+      document.getElementById("result-slot").textContent = "JACKPOT!";
+    } else if (symbols[0] === symbols[1] || symbols[1] === symbols[2] || symbols[0] === symbols[2]) {
+      let prize = slotsBet * 2;
+      coins += prize;
+      floatCoins(prize);
+      document.getElementById("result-slot").textContent = "won small";
+    } else {
+      document.getElementById("result-slot").textContent = "lost";
+    }
+    updateCoins();
   }
   updateCoins();
 </script>
