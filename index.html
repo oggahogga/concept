@@ -156,7 +156,7 @@
   const updateCoins = () => document.getElementById('coins').textContent = coins;
 
   function login() {
-    if (username.value === 'admin' && password.value === 'admin') {
+    if (document.getElementById('username').value === 'admin' && document.getElementById('password').value === 'admin') {
       loginForm.classList.add('hidden');
       gameArea.classList.remove('hidden');
       updateCoins();
