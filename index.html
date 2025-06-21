@@ -103,91 +103,133 @@
       100% { opacity: 0; transform: translateY(-30px); }
     }
     .hidden { display: none; }
-    #grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
-      margin: 20px auto;
-      width: 80%;
-    }
-    .tile {
-      background: #2b2547;
-      padding-top: 100%;
-      position: relative;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .tile.revealed.safe {
-      background: #48ff92;
-    }
-    .tile.revealed.mine {
-      background: #ff4e4e;
-    }
-    .tile.revealed::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-    }
-    p {
-      text-align: center;
-    }
-    #minesCashout {
-      font-weight: 600;
-      margin-top: 12px;
+    #login-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
     }
   </style>
 </head>
 <body>
 <main>
-  <div id="coins-wrap">Coins: <span id="coins">10000</span></div>
-
-  <!-- login, menu, other game divs here -->
-
-  <div id="mines-game" class="hidden fade-up">
-    <h1>mines</h1>
-    <input type="range" id="minesBet" min="100" max="5000" value="100" oninput="updateMinesBet()" />
-    <p>starting bet: <span id="minesBetDisplay">100</span> coins</p>
-    <div id="grid"></div>
-    <p id="result-mine"></p>
-    <p id="minesCashout"></p>
-    <button onclick="cashoutMines()">cash out</button>
-    <button onclick="resetMines()">retry</button>
-    <button onclick="goBack()">back</button>
+  <div id="login-form">
+    <h1>login</h1>
+    <input type="text" id="username" placeholder="admin">
+    <input type="password" id="password" placeholder="admin">
+    <button onclick="login()">enter</button>
   </div>
 
-  <!-- add plinko div here -->
+  <div id="game-area" class="hidden">
+    <div id="coins-wrap">Coins: <span id="coins">10000</span></div>
+    <div class="btn-group">
+      <button onclick="startCoinflip()">🪙 Coinflip</button>
+      <button onclick="startMines()">💣 Mines</button>
+      <button onclick="startPlinko()">🔻 Plinko</button>
+    </div>
+    <div id="coinflip-game" class="hidden">
+      <h1>Coinflip</h1>
+      <input type="range" id="cfBet" min="100" max="10000" value="100" oninput="cfVal.innerText=this.value">
+      <p>betting: <span id="cfVal">100</span> coins</p>
+      <button onclick="flipCoin()">Flip</button>
+      <p id="cfResult"></p>
+    </div>
+    <div id="mines-game" class="hidden">
+      <h1>Mines</h1>
+      <input type="range" id="minesBet" min="100" max="10000" value="100" oninput="minesBetDisplay.innerText=this.value">
+      <p>betting: <span id="minesBetDisplay">100</span> coins</p>
+      <div id="minesGrid"></div>
+      <p id="minesMsg"></p>
+      <button onclick="cashoutMines()">cash out</button>
+    </div>
+    <div id="plinko-game" class="hidden">
+      <h1>Plinko</h1>
+      <input type="range" id="plinkoBet" min="100" max="10000" value="100" oninput="plinkoBetDisplay.innerText=this.value">
+      <p>betting: <span id="plinkoBetDisplay">100</span> coins</p>
+      <button onclick="dropPlinko()">drop</button>
+      <p id="plinkoResult"></p>
+    </div>
+  </div>
 </main>
 <script>
-  let minesHits = 0;
-  function handleMineClick(tile, i) {
-    if (tile.classList.contains('revealed') || gameOver) return;
-    tile.classList.add('revealed');
-    if (mineIndexes.includes(i)) {
-      tile.classList.add('mine');
-      document.getElementById('result-mine').textContent = "you exploded";
-      revealMines();
-      gameOver = true;
-      minesHits = 0;
-      document.getElementById('minesCashout').textContent = "";
-    } else {
-      tile.classList.add('safe');
-      minesHits++;
-      let gain = Math.floor(minesBet * 0.15);
-      coins += gain;
-      floatCoins(gain);
+  let coins = 10000;
+  const updateCoins = () => document.getElementById('coins').textContent = coins;
+
+  function login() {
+    if (username.value === 'admin' && password.value === 'admin') {
+      loginForm.classList.add('hidden');
+      gameArea.classList.remove('hidden');
       updateCoins();
-      document.getElementById('minesCashout').textContent = `cashout value: ${Math.floor(minesHits * minesBet * 0.15)} coins`;
+    } else alert('nah wrong login');
+  }
+
+  function showOnly(id) {
+    ['coinflip-game','mines-game','plinko-game'].forEach(i=>document.getElementById(i).classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+  }
+
+  function startCoinflip() { showOnly('coinflip-game'); }
+  function startMines() { showOnly('mines-game'); setupMines(); }
+  function startPlinko() { showOnly('plinko-game'); }
+
+  function flipCoin() {
+    const bet = parseInt(cfBet.value);
+    if (coins < bet) return alert('nah broke');
+    const win = Math.random() < 0.5;
+    coins += win ? bet : -bet;
+    updateCoins();
+    cfResult.innerText = win ? `+${bet} heads` : `-${bet} tails`;
+  }
+
+  // Mines setup
+  let mineIndexes = [], minesHits = 0;
+  function setupMines() {
+    const grid = document.getElementById('minesGrid');
+    grid.innerHTML = '';
+    mineIndexes = Array.from({length: 25}, (_,i)=>i).sort(()=>.5-Math.random()).slice(0,5);
+    for (let i = 0; i < 25; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = '❓';
+      btn.style.margin = '2px';
+      btn.onclick = () => clickMine(btn, i);
+      grid.appendChild(btn);
+    }
+    minesHits = 0;
+    minesMsg.innerText = '';
+  }
+
+  function clickMine(btn, idx) {
+    const bet = parseInt(minesBet.value);
+    if (mineIndexes.includes(idx)) {
+      btn.textContent = '💥';
+      coins -= bet;
+      updateCoins();
+      minesMsg.innerText = 'you exploded';
+    } else {
+      btn.textContent = '✅';
+      minesHits++;
+      const gain = Math.floor(bet * 0.15 * minesHits);
+      minesMsg.innerText = `cashout value: ${gain}`;
     }
   }
+
   function cashoutMines() {
-    let cash = Math.floor(minesHits * minesBet * 0.15);
-    floatCoins(cash);
-    coins += cash;
+    const bet = parseInt(minesBet.value);
+    const gain = Math.floor(bet * 0.15 * minesHits);
+    coins += gain;
     updateCoins();
-    document.getElementById('result-mine').textContent = `cashed out with ${cash} coins`;
-    revealMines();
-    gameOver = true;
+    minesMsg.innerText = `cashed out: ${gain}`;
+  }
+
+  function dropPlinko() {
+    const bet = parseInt(plinkoBet.value);
+    if (coins < bet) return alert('nah');
+    coins -= bet;
+    const multiplier = [0, 0.5, 1, 2][Math.floor(Math.random()*4)];
+    const win = Math.floor(bet * multiplier);
+    coins += win;
+    updateCoins();
+    plinkoResult.innerText = `won ${win} coins`;
   }
 </script>
 </body>
