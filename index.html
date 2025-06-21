@@ -26,11 +26,6 @@
       flex-direction: column;
       align-items: center;
     }
-    .fade-up { animation: fadeUp 1s ease forwards; }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
     h1 {
       font-size: 2.25rem;
       margin-bottom: 20px;
@@ -38,9 +33,7 @@
       font-weight: 800;
       text-align: center;
     }
-    input[type="text"],
-    input[type="password"],
-    input[type="range"] {
+    input[type="text"], input[type="password"], input[type="range"] {
       width: 80%;
       display: block;
       margin: 0 auto 12px auto;
@@ -90,24 +83,17 @@
       font-weight: 600;
       font-size: 1.1rem;
     }
-    .coin-float {
-      position: absolute;
-      top: -5px;
-      right: 0;
-      color: #7fffa8;
-      font-weight: bold;
-      animation: floatUp 1s ease-out forwards;
-    }
-    @keyframes floatUp {
-      0% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-30px); }
-    }
     .hidden { display: none; }
     #login-form {
       display: flex;
       flex-direction: column;
       align-items: center;
       width: 100%;
+    }
+    canvas {
+      margin: 16px 0;
+      background: #1e1b34;
+      border-radius: 10px;
     }
   </style>
 </head>
@@ -123,10 +109,11 @@
   <div id="game-area" class="hidden">
     <div id="coins-wrap">Coins: <span id="coins">10000</span></div>
     <div class="btn-group">
-      <button onclick="startCoinflip()">🪙 Coinflip</button>
-      <button onclick="startMines()">💣 Mines</button>
-      <button onclick="startPlinko()">🔻 Plinko</button>
+      <button onclick="showOnly('coinflip-game')">🪙 Coinflip</button>
+      <button onclick="showOnly('mines-game'); setupMines()">💣 Mines</button>
+      <button onclick="showOnly('plinko-game')">🔻 Plinko</button>
     </div>
+
     <div id="coinflip-game" class="hidden">
       <h1>Coinflip</h1>
       <input type="range" id="cfBet" min="100" max="10000" value="100" oninput="cfVal.innerText=this.value">
@@ -134,18 +121,21 @@
       <button onclick="flipCoin()">Flip</button>
       <p id="cfResult"></p>
     </div>
+
     <div id="mines-game" class="hidden">
       <h1>Mines</h1>
       <input type="range" id="minesBet" min="100" max="10000" value="100" oninput="minesBetDisplay.innerText=this.value">
       <p>betting: <span id="minesBetDisplay">100</span> coins</p>
-      <div id="minesGrid"></div>
+      <div id="minesGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;"></div>
       <p id="minesMsg"></p>
       <button onclick="cashoutMines()">cash out</button>
     </div>
+
     <div id="plinko-game" class="hidden">
       <h1>Plinko</h1>
       <input type="range" id="plinkoBet" min="100" max="10000" value="100" oninput="plinkoBetDisplay.innerText=this.value">
       <p>betting: <span id="plinkoBetDisplay">100</span> coins</p>
+      <canvas id="plinkoCanvas" width="300" height="300"></canvas>
       <button onclick="dropPlinko()">drop</button>
       <p id="plinkoResult"></p>
     </div>
@@ -153,29 +143,23 @@
 </main>
 <script>
   let coins = 10000;
-  const updateCoins = () => document.getElementById('coins').textContent = coins;
+  let minesHits = 0, mineIndexes = [];
+  const updateCoins = () => coinsEl.innerText = coins;
 
   function login() {
-  const user = document.getElementById('username').value;
-  const pass = document.getElementById('password').value;
-  if (user === 'admin' && pass === 'admin') {
-    document.getElementById('login-form').classList.add('hidden');
-    document.getElementById('game-area').classList.remove('hidden');
-    updateCoins();
-  } else {
-    alert('nah wrong login');
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
+    if (u === 'admin' && p === 'admin') {
+      document.getElementById('login-form').classList.add('hidden');
+      document.getElementById('game-area').classList.remove('hidden');
+      updateCoins();
+    } else alert('wrong login');
   }
-}
-
 
   function showOnly(id) {
     ['coinflip-game','mines-game','plinko-game'].forEach(i=>document.getElementById(i).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
   }
-
-  function startCoinflip() { showOnly('coinflip-game'); }
-  function startMines() { showOnly('mines-game'); setupMines(); }
-  function startPlinko() { showOnly('plinko-game'); }
 
   function flipCoin() {
     const bet = parseInt(cfBet.value);
@@ -186,26 +170,23 @@
     cfResult.innerText = win ? `+${bet} heads` : `-${bet} tails`;
   }
 
-  // Mines setup
-  let mineIndexes = [], minesHits = 0;
   function setupMines() {
-    const grid = document.getElementById('minesGrid');
-    grid.innerHTML = '';
-    mineIndexes = Array.from({length: 25}, (_,i)=>i).sort(()=>.5-Math.random()).slice(0,5);
+    minesGrid.innerHTML = '';
+    mineIndexes = Array.from({length: 25}, (_,i)=>i).sort(()=>0.5-Math.random()).slice(0,5);
     for (let i = 0; i < 25; i++) {
       const btn = document.createElement('button');
-      btn.textContent = '❓';
-      btn.style.margin = '2px';
+      btn.textContent = '?';
+      btn.style.padding = '20px';
       btn.onclick = () => clickMine(btn, i);
-      grid.appendChild(btn);
+      minesGrid.appendChild(btn);
     }
     minesHits = 0;
     minesMsg.innerText = '';
   }
 
-  function clickMine(btn, idx) {
+  function clickMine(btn, i) {
     const bet = parseInt(minesBet.value);
-    if (mineIndexes.includes(idx)) {
+    if (mineIndexes.includes(i)) {
       btn.textContent = '💥';
       coins -= bet;
       updateCoins();
@@ -213,14 +194,14 @@
     } else {
       btn.textContent = '✅';
       minesHits++;
-      const gain = Math.floor(bet * 0.15 * minesHits);
-      minesMsg.innerText = `cashout value: ${gain}`;
+      let cash = Math.floor(minesHits * bet * 0.15);
+      minesMsg.innerText = `cashout value: ${cash}`;
     }
   }
 
   function cashoutMines() {
     const bet = parseInt(minesBet.value);
-    const gain = Math.floor(bet * 0.15 * minesHits);
+    let gain = Math.floor(minesHits * bet * 0.15);
     coins += gain;
     updateCoins();
     minesMsg.innerText = `cashed out: ${gain}`;
@@ -230,11 +211,24 @@
     const bet = parseInt(plinkoBet.value);
     if (coins < bet) return alert('nah');
     coins -= bet;
-    const multiplier = [0, 0.5, 1, 2][Math.floor(Math.random()*4)];
-    const win = Math.floor(bet * multiplier);
+    const canvas = document.getElementById('plinkoCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const slots = [0, 0.5, 1, 1.5, 2];
+    let pos = 2;
+    for (let i = 0; i < 8; i++) {
+      pos += Math.random() < 0.5 ? -1 : 1;
+      if (pos < 0) pos = 0;
+      if (pos > 4) pos = 4;
+    }
+    const win = Math.floor(bet * slots[pos]);
     coins += win;
     updateCoins();
     plinkoResult.innerText = `won ${win} coins`;
+    ctx.fillStyle = '#7fffa8';
+    ctx.beginPath();
+    ctx.arc(pos * 60 + 30, 270, 10, 0, Math.PI * 2);
+    ctx.fill();
   }
 </script>
 </body>
